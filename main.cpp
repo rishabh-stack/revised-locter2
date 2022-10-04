@@ -1,47 +1,70 @@
-int parent[100000];
-int rank[100000];
+#include<bits/stdc++.h>
 
-void makeSet() {
-    for(int i = 1; i <= n; i++) {
-        parent[i] = i;
-        rank[i] = 0;
+using namespace std;
+
+struct node {
+    int u, v, wt;
+    node(int first, int second, int weight) {
+        u = first, v = second, wt = weight;
     }
+};
+
+bool comp(node a, node b) {
+    return a.wt < b.wt;
 }
 
-int findPar(int node) {
-    if(node == parent[node]) {
-        return node;
-    }
-
-    return parent[node] = findPar(parent[node]);
+int findPar(int u, vector<int> &parent) {
+    if(u == parent[u]) return u;
+    return findPar(parent[u], parent);
 }
 
-void union(int u, int v) {
-    u = findPar(u);
-    v = findPar(v);
-
+void unionn(int u, int v, vector<int> &parent, vector<int> &rank) {
+    u = findPar(u, parent);
+    v = findPar(v, parent);
     if(rank[u] < rank[v]) {
         parent[u] = v;
-    } else if(rank[v] < rank[u]) {
+    }
+    else if(rank[v] < rank[u]) {
         parent[v] = u;
-    } else {
+    }
+    else {
         parent[v] = u;
         rank[u]++;
     }
 }
 
-void main() {
-    makeSet();
-    int m;
-    cin >> m;
-    while(m--) {
-        int u, v; cin >> u >> v;
-        union(u, v);
+int main() {
+    int N, m;
+    cin >> N >> m;
+    vector<node> edges;
+    for(int i = 0; i < m; i++) {
+        int u, v, wt;
+        cin >> u >> v >> wt;
+        edges.push_back(node(u, v, wt));
     }
-    // if 2 and 3 belong to the same component or not
-    if(findPar(2) != findPar(3)) {
-        cout << "Different Component";
-    } else {
-        cout << "Same Component";
+    sort(edges.begin(), edges.end(), comp);
+
+    vector<int> parent(N);
+    for(int i = 0; i < N; i++) {
+        parent[i] = i;
     }
+    vector<int> rank(N, 0);
+
+    int cost = 0;
+    vector<pair<int, int>> mst;
+    for(auto it : edges) {
+        if(findPar(it.v, parent) != findPar(it.u, parent)) {
+            cost += it.wt;
+            mst.push_back({it.v, it.u});
+            unionn(it.u, it.v, parent, rank);
+        }
+    }
+
+    cout << cost << "\n";
+    for(auto it : mst) {
+        cout << it.first << " - " << it.second << "\n";
+    }
+
+    return 0;
+
 }
